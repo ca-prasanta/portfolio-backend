@@ -86,7 +86,7 @@ app.post("/send-mail", async (req, res) => {
 
     // Send only to YOU
     await client.sendEmail({
-      From: process.env.TO_EMAIL,  // Postmark requires sender = verified domain email
+      From: process.env.FROM_EMAIL,  // Postmark requires sender = verified domain email
       To: process.env.TO_EMAIL,    // You receive the email
       Subject: "New Portfolio Query Received",
       HtmlBody: html
