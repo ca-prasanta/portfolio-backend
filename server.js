@@ -18,6 +18,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://personal-portfolio-theta-seven-20.vercel.app",
+      "https://pkchandacpa.com"
     ],
   })
 );
