@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import postmark from "postmark";
+
 
 dotenv.config();
 
@@ -62,19 +63,20 @@ app.post("/send-mail", async (req, res) => {
     // ---------------------
     // Nodemailer Setup
     // ---------------------
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // const transporter = nodemailer.createTransport({
+    //   host: process.env.SMTP_HOST || "smtp.gmail.com",
+    //   port: Number(process.env.SMTP_PORT) || 465,
+    //   secure: true,
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    // });
 
-    // Email body
+    // Initialize Postmark client
+    const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
     const html = `
-      <h2>New Query</h2>
+      <h2>New Query From Website</h2>
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone_number}</p>
@@ -82,12 +84,20 @@ app.post("/send-mail", async (req, res) => {
       <p><strong>Message:</strong> ${summery}</p>
     `;
 
-    await transporter.sendMail({
-      from: `"Portfolio Query" <${process.env.EMAIL_USER}>`,
-      to: process.env.TO_EMAIL,
-      subject: "New Contact Form Submission",
-      html,
+    // Send only to YOU
+    await client.sendEmail({
+      From: process.env.TO_EMAIL,  // Postmark requires sender = verified domain email
+      To: process.env.TO_EMAIL,    // You receive the email
+      Subject: "New Portfolio Query Received",
+      HtmlBody: html
     });
+
+    // await transporter.sendMail({
+    //   from: `"Portfolio Query" <${process.env.EMAIL_USER}>`,
+    //   to: process.env.TO_EMAIL,
+    //   subject: "New Contact Form Submission",
+    //   html,
+    // });
 
     return res.json({ success: true });
   } catch (error) {
