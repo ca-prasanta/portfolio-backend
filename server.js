@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import postmark from "postmark";
-
+import axios from "axios";
 
 dotenv.config();
 
@@ -39,26 +39,26 @@ app.post("/send-mail", async (req, res) => {
   try {
     const { name, email, phone_number, company_name, summery, token } = req.body;
 
-    // Optional — Turnstile verification
-    if (process.env.TURNSTILE_SECRET && token) {
-      const form = new URLSearchParams();
-      form.append("secret", process.env.TURNSTILE_SECRET);
-      form.append("response", token);
+  if (!token) {
+      return res.status(400).json({ success: false, error: "Captcha missing" });
+    }
 
-      const result = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-          method: "POST",
-          body: form,
-        }
-      );
+    // VERIFY CAPTCHA
+    const verifyURL = "https://hcaptcha.com/siteverify";
 
-      const data = await result.json();
-      if (!data.success) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Captcha failed" });
+    const response = await axios.post(
+      verifyURL,
+      {},
+      {
+        params: {
+          secret: process.env.HCAPTCHA_SECRET,
+          response: token,
+        },
       }
+    );
+
+    if (!response.data.success) {
+      return res.status(400).json({ success: false, error: "Captcha failed" });
     }
 
     // ---------------------
